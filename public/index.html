@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internet Speed Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #6b7280, #1f2937);
+        }
+        .speedometer {
+            position: relative;
+            width: 100%;
+            max-width: 200px;
+            aspect-ratio: 1 / 1;
+            background: conic-gradient(#34d399 0% 0%, #e5e7eb 0% 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 1s ease;
+            margin: 0 auto;
+        }
+        .speedometer::before {
+            content: '';
+            position: absolute;
+            width: 90%;
+            height: 90%;
+            background: white;
+            border-radius: 50%;
+        }
+        .needle {
+            position: absolute;
+            width: 2px;
+            height: 40%;
+            background: #ef4444;
+            transform-origin: bottom;
+            transition: transform 1s ease;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @media (max-width: 640px) {
+            .speedometer {
+                max-width: 150px;
+            }
+            .text-3xl {
+                font-size: 1.5rem;
+            }
+            .text-2xl {
+                font-size: 1.25rem;
+            }
+            .p-8 {
+                padding: 1.5rem;
+            }
+            .mb-8 {
+                margin-bottom: 1.5rem;
+            }
+            .mb-6 {
+                margin-bottom: 1rem;
+            }
+            .py-3 {
+                padding-top: 0.75rem;
+                padding-bottom: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div id="root"></div>
+
+    <script>
+        function SpeedTest() {
+            const [downloadSpeed, setDownloadSpeed] = React.useState(0);
+            const [uploadSpeed, setUploadSpeed] = React.useState(0);
+            const [ping, setPing] = React.useState(0);
+            const [isTesting, setIsTesting] = React.useState(false);
+            const [error, setError] = React.useState(null);
+
+            // Replace with your deployed Render URL after deployment
+            const serverUrl = 'YOUR_LIVE_SERVER_URL';
+
+            const testPing = async () => {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(`${serverUrl}/ping`, {
+                        method: 'GET',
+                        cache: 'no-store'
+                    });
+                    if (!response.ok) throw new Error(`Ping test failed: ${response.statusText}`);
+                    const data = await response.json();
+                    const endTime = Date.now();
+                    const latency = endTime - startTime;
+                    setPing(latency.toFixed(1));
+                    return latency;
+                } catch (err) {
+                    setError('Ping test failed: ' + err.message);
+                    throw err;
+                }
+            };
+
+            const testDownload = async () => {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(`${serverUrl}/download`, {
+                        method: 'GET',
+                        cache: 'no-store'
+                    });
+                    if (!response.ok) throw new Error(`Download test failed: ${response.statusText}`);
+                    const data = await response.arrayBuffer();
+                    const endTime = Date.now();
+                    const duration = (endTime - startTime) / 1000;
+                    if (duration === 0) throw new Error('Download duration too short');
+                    const bytes = data.byteLength;
+                    const speedMbps = (bytes * 8) / (duration * 1024 * 1024);
+                    setDownloadSpeed(speedMbps.toFixed(1));
+                    return speedMbps;
+                } catch (err) {
+                    setError('Download test failed: ' + err.message);
+                    throw err;
+                }
+            };
+
+            const testUpload = async () => {
+                try {
+                    const dataSize = 5 * 1024 * 1024; // 5 MB
+                    const buffer = new ArrayBuffer(dataSize);
+                    const response = await fetch(`${serverUrl}/upload`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/octet-stream',
+                            'Content-Length': dataSize
+                        },
+                        body: buffer
+                    });
+                    if (!response.ok) throw new Error(`Upload test failed: ${response.statusText}`);
+                    const result = await response.json();
+                    if (result.error) throw new Error(result.error);
+                    setUploadSpeed(result.uploadSpeed);
+                    return result.uploadSpeed;
+                } catch (err) {
+                    setError('Upload test failed: ' + err.message);
+                    throw err;
+                }
+            };
+
+            const testSpeed = async () => {
+                setIsTesting(true);
+                setError(null);
+                try {
+                    await testPing();
+                    await testDownload();
+                    await testUpload();
+                } catch (error) {
+                    console.error('Test failed:', error);
+                } finally {
+                    setIsTesting(false);
+                }
+            };
+
+            const getNeedleRotation = (speed) => {
+                const maxSpeed = 100;
+                const angle = (speed / maxSpeed) * 180;
+                return `rotate(${angle}deg)`;
+            };
+
+            return React.createElement(
+                'div',
+                { className: 'bg-white rounded-xl shadow-2xl p-8 max-w-md w-full' },
+                React.createElement('h1', { className: 'text-3xl font-bold text-center text-gray-800 mb-6' }, 'Internet Speed Test'),
+                React.createElement(
+                    'div',
+                    { className: 'flex flex-col sm:flex-row justify-around mb-8 gap-6' },
+                    React.createElement(
+                        'div',
+                        { className: 'text-center' },
+                        React.createElement(
+                            'div',
+                            {
+                                className: 'speedometer',
+                                style: { background: `conic-gradient(#34d399 0% ${downloadSpeed / 100 * 100}%, #e5e7eb ${downloadSpeed / 100 * 100}% 100%)` }
+                            },
+                            React.createElement('div', { className: 'needle', style: { transform: getNeedleRotation(downloadSpeed) } }),
+                            React.createElement('div', { className: 'relative text-2xl font-semibold text-gray-800' }, downloadSpeed)
+                        ),
+                        React.createElement('p', { className: 'text-gray-600 mt-2' }, 'Download (Mbps)')
+                    ),
+                    React.createElement(
+                        'div',
+                        { className: 'text-center' },
+                        React.createElement(
+                            'div',
+                            {
+                                className: 'speedometer',
+                                style: { background: `conic-gradient(#3b82f6 0% ${uploadSpeed / 100 * 100}%, #e5e7eb ${uploadSpeed / 100 * 100}% 100%)` }
+                            },
+                            React.createElement('div', { className: 'needle', style: { transform: getNeedleRotation(uploadSpeed) } }),
+                            React.createElement('div', { className: 'relative text-2xl font-semibold text-gray-800' }, uploadSpeed)
+                        ),
+                        React.createElement('p', { className: 'text-gray-600 mt-2' }, 'Upload (Mbps)')
+                    )
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'text-center mb-6' },
+                    React.createElement('p', { className: 'text-gray-600' },
+                        'Ping: ',
+                        React.createElement('span', { className: 'font-semibold text-gray-800' }, ping + ' ms')
+                    )
+                ),
+                error && React.createElement(
+                    'div',
+                    { className: 'text-center mb-6 text-red-500' },
+                    error
+                ),
+                React.createElement(
+                    'button',
+                    {
+                        onClick: testSpeed,
+                        disabled: isTesting,
+                        className: `w-full py-3 rounded-lg text-white font-semibold transition-all duration-300 ${isTesting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 pulse'}`
+                    },
+                    isTesting ? 'Testing...' : 'Start Test'
+                ),
+                React.createElement(
+                    'p',
+                    { className: 'text-sm text-gray-500 text-center mt-4' },
+                    'Note: Actual speeds may vary based on network and server conditions.'
+                )
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(SpeedTest));
+    </script>
+</body>
+</html>
