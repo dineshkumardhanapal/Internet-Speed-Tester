@@ -85,8 +85,8 @@
             const [isTesting, setIsTesting] = React.useState(false);
             const [error, setError] = React.useState(null);
 
-            // Replace with your deployed Render URL after deployment
-            const serverUrl = 'https://internet-speed-tester-44c7.onrender.com';
+            // Replace with your deployed Render URL
+            const serverUrl = 'https://internet-speed-tester-44c7.onrender.com'; // e.g., 'https://speed-test-2025.onrender.com'
 
             const testPing = async () => {
                 try {
@@ -95,14 +95,14 @@
                         method: 'GET',
                         cache: 'no-store'
                     });
-                    if (!response.ok) throw new Error(`Ping test failed: ${response.statusText}`);
+                    if (!response.ok) throw new Error(`HTTP error: ${response.statusText}`);
                     const data = await response.json();
                     const endTime = Date.now();
                     const latency = endTime - startTime;
                     setPing(latency.toFixed(1));
                     return latency;
                 } catch (err) {
-                    setError('Ping test failed: ' + err.message);
+                    setError(err.message);
                     throw err;
                 }
             };
@@ -114,7 +114,7 @@
                         method: 'GET',
                         cache: 'no-store'
                     });
-                    if (!response.ok) throw new Error(`Download test failed: ${response.statusText}`);
+                    if (!response.ok) throw new Error(`HTTP error: ${response.statusText}`);
                     const data = await response.arrayBuffer();
                     const endTime = Date.now();
                     const duration = (endTime - startTime) / 1000;
@@ -124,7 +124,7 @@
                     setDownloadSpeed(speedMbps.toFixed(1));
                     return speedMbps;
                 } catch (err) {
-                    setError('Download test failed: ' + err.message);
+                    setError(err.message);
                     throw err;
                 }
             };
@@ -141,13 +141,13 @@
                         },
                         body: buffer
                     });
-                    if (!response.ok) throw new Error(`Upload test failed: ${response.statusText}`);
+                    if (!response.ok) throw new Error(`HTTP error: ${response.statusText}`);
                     const result = await response.json();
                     if (result.error) throw new Error(result.error);
                     setUploadSpeed(result.uploadSpeed);
                     return result.uploadSpeed;
                 } catch (err) {
-                    setError('Upload test failed: ' + err.message);
+                    setError(err.message);
                     throw err;
                 }
             };
@@ -219,7 +219,7 @@
                 error && React.createElement(
                     'div',
                     { className: 'text-center mb-6 text-red-500' },
-                    error
+                    'Error: ' + error
                 ),
                 React.createElement(
                     'button',
