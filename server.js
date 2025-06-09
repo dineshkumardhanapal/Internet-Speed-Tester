@@ -19,23 +19,29 @@ app.get('/download', (req, res) => {
         res.send(buffer);
     } catch (error) {
         console.error('Download error:', error.message);
-        res.status(500).json({ error: 'Failed to process download' });
+        res.status(500).json({ error: 'Failed to process download: ' + error.message });
     }
 });
 
 app.post('/upload', (req, res) => {
     try {
+        if (!req.body) {
+            throw new Error('No data received in request body');
+        }
         const startTime = Date.now();
         if (!Buffer.isBuffer(req.body)) {
             throw new Error('Invalid upload data: Expected a buffer');
         }
         const dataSize = req.body.length;
+        console.log('Upload data size:', dataSize, 'bytes');
         const endTime = Date.now();
         const duration = (endTime - startTime) / 1000;
+        console.log('Upload duration:', duration, 'seconds');
         if (duration === 0) {
             throw new Error('Upload duration too short to measure');
         }
         const speedMbps = (dataSize * 8) / (duration * 1024 * 1024);
+        console.log('Calculated upload speed:', speedMbps, 'Mbps');
         res.json({ uploadSpeed: speedMbps.toFixed(1) });
     } catch (error) {
         console.error('Upload error:', error.message);
@@ -48,7 +54,7 @@ app.get('/ping', (req, res) => {
         res.json({ time: Date.now() });
     } catch (error) {
         console.error('Ping error:', error.message);
-        res.status(500).json({ error: 'Failed to process ping' });
+        res.status(500).json({ error: 'Failed to process ping: ' + error.message });
     }
 });
 
