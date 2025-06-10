@@ -1,0 +1,4 @@
+# backend/requirements.txt
+Flask==3.0.3
+Flask-Cors==4.0.1
+gunicorn==22.0.0 # Gunicorn is a production-ready WSGI HTTP Server for Unix. Render uses it.
