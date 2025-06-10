@@ -3,7 +3,7 @@
 
 services:
   # Frontend Static Site
-  - type: static_site
+  - type: static # Corrected type from static_site to static
     name: speed-test-frontend
     buildCommand: # No build command needed for plain HTML/CSS/JS
     staticPublishPath: . # Publish everything in the root directory
