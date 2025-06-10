@@ -17,12 +17,11 @@ const startButton = document.getElementById('startButton');
 const TEST_DURATION_SECONDS = 10; // How long each test (download/upload) runs
 const PING_COUNT = 10; // Number of pings to perform
 const DOWNLOAD_CHUNK_SIZE_MB = 1; // Size of each chunk to download (in MB)
-const DOWNLOAD_URL = 'https://speed.cloudflare.com/__down?bytes='; // Cloudflare's speed test endpoint
-// Note: Direct upload testing without a server endpoint is complex.
-// This example uses a mock upload with a fixed data size for demonstration.
-// For a real-world scenario, you'd need a backend endpoint that accepts uploads.
-const MOCK_UPLOAD_SIZE_MB = 20; // Simulate uploading 20MB of data
-const MOCK_UPLOAD_URL = 'https://jsonplaceholder.typicode.com/posts'; // A dummy endpoint for POST requests
+const UPLOAD_CHUNK_SIZE_MB = 1; // Size of each chunk to upload (in MB) for more realistic simulation
+
+// Cloudflare's speed test endpoints for better accuracy
+const DOWNLOAD_URL = 'https://speed.cloudflare.com/__down?bytes=';
+const UPLOAD_URL = 'https://speed.cloudflare.com/__up';
 
 // Internal State
 let testRunning = false;
@@ -48,7 +47,7 @@ function updateSpeedDial(speed) {
     // Map speed to a rotation angle (-135deg to 135deg)
     // Assuming max speed on dial is ~200 Mbps for visual representation
     const maxDialSpeed = 200;
-    const angleRange = 270; // From -135deg to +135deg
+    const angleRange = 270; // From -135deg (start) to +135deg (end) covers 270 degrees
     const angle = (speed / maxDialSpeed) * angleRange - (angleRange / 2); // Calculate angle, centered
     speedNeedle.style.transform = `translateX(-50%) rotate(${angle}deg)`;
     speedValueDisplay.textContent = speed.toFixed(speed < 10 ? 1 : 0);
@@ -63,12 +62,13 @@ function resetResults() {
     downloadResultDisplay.textContent = '0 Mbps';
     uploadResultDisplay.textContent = '0 Mbps';
     speedValueDisplay.textContent = '0';
-    speedNeedle.style.transform = 'translateX(-50%) rotate(-135deg)';
+    speedNeedle.style.transform = 'translateX(-50%) rotate(-135deg)'; // Reset needle to start position
     updateStatus('Click "Start Test" to begin.');
 }
 
 /**
  * Fetches public IP and Network Provider information.
+ * Uses ip-api.com. Note: This might be blocked by CORS policies in some iframe environments.
  */
 async function fetchIpAndProvider() {
     try {
@@ -150,6 +150,16 @@ async function runDownloadTest() {
                 return;
             }
 
+            // If duration exceeds, stop the interval and resolve
+            const totalTimeElapsed = (performance.now() - startTime) / 1000;
+            if (totalTimeElapsed >= TEST_DURATION_SECONDS) {
+                clearInterval(interval);
+                const finalSpeedMbps = (totalBytesDownloaded * 8) / (TEST_DURATION_SECONDS * 1000 * 1000);
+                downloadResultDisplay.textContent = `${finalSpeedMbps.toFixed(1)} Mbps`;
+                resolve(finalSpeedMbps);
+                return;
+            }
+
             const downloadStart = performance.now();
             try {
                 const response = await fetch(`${DOWNLOAD_URL}${DOWNLOAD_CHUNK_SIZE_MB * 1024 * 1024}`, { cache: 'no-store' });
@@ -158,45 +168,31 @@ async function runDownloadTest() {
                 const bytes = blob.size;
                 totalBytesDownloaded += bytes;
 
-                const duration = (performance.now() - downloadStart) / 1000; // time for this chunk in seconds
-                const currentRateMbps = (bytes * 8) / (duration * 1000 * 1000); // Bytes to Mbits, then per second
+                // Calculate current average speed based on overall test duration
+                const currentAverageSpeedMbps = (totalBytesDownloaded * 8) / (totalTimeElapsed * 1000 * 1000);
 
-                // Calculate average speed based on total time elapsed
-                const totalTimeElapsed = (performance.now() - startTime) / 1000;
-                const averageSpeedMbps = (totalBytesDownloaded * 8) / (totalTimeElapsed * 1000 * 1000);
-
-                downloadResultDisplay.textContent = `${averageSpeedMbps.toFixed(1)} Mbps`;
-                updateSpeedDial(averageSpeedMbps);
+                downloadResultDisplay.textContent = `${currentAverageSpeedMbps.toFixed(1)} Mbps`;
+                updateSpeedDial(currentAverageSpeedMbps);
             } catch (error) {
                 console.error('Download test error:', error);
-                // Optionally show error on UI
-            }
-
-            // Check if test duration has passed
-            if ((performance.now() - startTime) / 1000 >= TEST_DURATION_SECONDS) {
-                clearInterval(interval);
-                const finalSpeedMbps = (totalBytesDownloaded * 8) / (TEST_DURATION_SECONDS * 1000 * 1000);
-                downloadResultDisplay.textContent = `${finalSpeedMbps.toFixed(1)} Mbps`;
-                resolve(finalSpeedMbps);
+                // Optionally show error on UI instead of just console
             }
         }, 500); // Check every 0.5 seconds
     });
 }
 
 /**
- * Performs simulated upload speed test.
- * Note: This is a client-side simulation. True upload speed tests require a dedicated backend.
+ * Performs upload speed test.
  * @returns {Promise<number>} Upload speed in Mbps.
  */
 async function runUploadTest() {
-    updateStatus('Running Upload Test (Simulated)...');
+    updateStatus('Running Upload Test...');
     let totalBytesUploaded = 0;
-    const dataToSend = new ArrayBuffer(1024 * 1024); // 1MB array buffer
-    const numChunks = MOCK_UPLOAD_SIZE_MB; // Total 20MB in chunks
+    // Create a Blob of random data to send
+    const dataToSend = new Blob([new Uint8Array(UPLOAD_CHUNK_SIZE_MB * 1024 * 1024)], { type: 'application/octet-stream' });
     let startTime = performance.now();
 
     return new Promise(resolve => {
-        let uploadedChunks = 0;
         const interval = setInterval(async () => {
             if (!testRunning) { // Allow stopping mid-test
                 clearInterval(interval);
@@ -204,7 +200,9 @@ async function runUploadTest() {
                 return;
             }
 
-            if (uploadedChunks >= numChunks) {
+            // If duration exceeds, stop the interval and resolve
+            const totalTimeElapsed = (performance.now() - startTime) / 1000;
+            if (totalTimeElapsed >= TEST_DURATION_SECONDS) {
                 clearInterval(interval);
                 const finalSpeedMbps = (totalBytesUploaded * 8) / (TEST_DURATION_SECONDS * 1000 * 1000);
                 uploadResultDisplay.textContent = `${finalSpeedMbps.toFixed(1)} Mbps`;
@@ -214,36 +212,27 @@ async function runUploadTest() {
 
             const uploadStart = performance.now();
             try {
-                // Simulate sending a chunk of data
-                const response = await fetch(MOCK_UPLOAD_URL, {
+                // Send the data Blob to Cloudflare's upload endpoint
+                const response = await fetch(UPLOAD_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: 'a'.repeat(1024 * 50) }) // Send 50KB JSON as an example
+                    headers: { 'Content-Type': 'application/octet-stream' },
+                    body: dataToSend,
+                    // Use keepalive to potentially avoid issues with fetch request being terminated early
+                    keepalive: true
                 });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-                const bytesSent = 50 * 1024; // Approximate bytes sent per mock request
-                totalBytesUploaded += bytesSent;
-                uploadedChunks++;
+                const bytesSentThisChunk = dataToSend.size; // Get actual size of blob sent
+                totalBytesUploaded += bytesSentThisChunk;
 
-                const duration = (performance.now() - uploadStart) / 1000;
-                const currentRateMbps = (bytesSent * 8) / (duration * 1000 * 1000);
+                // Calculate current average speed based on overall test duration
+                const currentAverageSpeedMbps = (totalBytesUploaded * 8) / (totalTimeElapsed * 1000 * 1000);
 
-                const totalTimeElapsed = (performance.now() - startTime) / 1000;
-                const averageSpeedMbps = (totalBytesUploaded * 8) / (totalTimeElapsed * 1000 * 1000);
-
-                uploadResultDisplay.textContent = `${averageSpeedMbps.toFixed(1)} Mbps`;
-                updateSpeedDial(averageSpeedMbps); // Update dial with upload speed
+                uploadResultDisplay.textContent = `${currentAverageSpeedMbps.toFixed(1)} Mbps`;
+                updateSpeedDial(currentAverageSpeedMbps); // Update dial with upload speed
             } catch (error) {
-                console.error('Upload test error (simulated):', error);
-                // Optionally show error on UI
-            }
-
-            if ((performance.now() - startTime) / 1000 >= TEST_DURATION_SECONDS) {
-                clearInterval(interval);
-                const finalSpeedMbps = (totalBytesUploaded * 8) / (TEST_DURATION_SECONDS * 1000 * 1000);
-                uploadResultDisplay.textContent = `${finalSpeedMbps.toFixed(1)} Mbps`;
-                resolve(finalSpeedMbps);
+                console.error('Upload test error:', error);
+                // Optionally show error on UI instead of just console
             }
         }, 500); // Try to send a chunk every 0.5 seconds
     });
@@ -273,12 +262,13 @@ async function startSpeedTest() {
     try {
         // Step 1: Ping Test
         await runPingTest();
+        if (!testRunning) return; // Check if stopped
 
         // Step 2: Download Test
         await runDownloadTest();
         if (!testRunning) return; // Check if stopped
 
-        // Step 3: Upload Test (Simulated)
+        // Step 3: Upload Test
         await runUploadTest();
         if (!testRunning) return; // Check if stopped
 
