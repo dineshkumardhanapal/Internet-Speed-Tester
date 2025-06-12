@@ -3,70 +3,364 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Internet Speed Test</title>
+    <title>Black & White Speed Test</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
-    <!-- Google Fonts - Inter for clean typography (can be replaced with Roboto/Google Sans if locally hosted) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-</head>
-<body class="font-inter bg-gradient-to-br from-blue-50 to-white text-gray-800 min-h-screen flex flex-col items-center justify-center p-4">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap'); /* For a techy/digital look */
 
-    <div class="container bg-white rounded-xl shadow-lg p-6 md:p-10 w-full max-w-2xl border border-gray-200 flex flex-col items-center">
-        <h1 class="text-4xl md:text-5xl font-extrabold text-blue-600 mb-6 text-center drop-shadow-sm">
-            Speed Test
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom animation for the spin effect on the button */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .animate-spin-custom {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Custom animations for result numbers (scaling in) */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .animate-fade-in-scale {
+            animation: fadeInScale 0.3s ease-out forwards;
+        }
+
+        /* Pulse animation for active speed display */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.9;
+            }
+        }
+
+        .animate-pulse-custom {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Button glow effect for black and white theme */
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(0, 0, 0, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 0, 0, 0.4); }
+            100% { box-shadow: 0 0 5px rgba(0, 0, 0, 0.4); }
+        }
+        .btn-glow:not(:disabled) {
+            animation: glow 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full border border-gray-200 relative overflow-hidden">
+        <h1 class="text-3xl font-extrabold text-center text-gray-900 mb-6">
+            Internet Speed Test
         </h1>
 
-        <!-- IP and ISP Information -->
-        <div class="info-section w-full text-center mb-8 bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-100">
-            <p class="text-lg text-gray-700 mb-2">
-                Your Public IP: <span id="publicIp" class="font-semibold text-blue-500">Loading...</span>
-            </p>
-            <p class="text-lg text-gray-700">
-                Network Provider: <span id="networkProvider" class="font-semibold text-blue-500">Loading...</span>
-            </p>
-        </div>
+        <!-- Ookla-like central speed display area -->
+        <div class="flex flex-col items-center justify-center mb-8 relative">
+            <!-- Outer circle for the "dial" visual -->
+            <div class="w-[min(80vw,16rem)] h-[min(80vw,16rem)] rounded-full bg-gradient-to-br from-gray-100 to-gray-300 flex items-center justify-center
+                        shadow-inner border-4 border-gray-400 relative">
+                <!-- Inner circle (optional, for more depth) -->
+                <div class="w-[min(70vw,14rem)] h-[min(70vw,14rem)] rounded-full bg-white flex items-center justify-center
+                            shadow-xl border-2 border-gray-200">
+                    <p id="current-live-speed" class="text-5xl font-extrabold text-gray-900 font-orbitron hidden">
+                        0.00 <span class="text-2xl">Mbps</span>
+                    </p>
+                </div>
+            </div>
 
-        <!-- Speed Dial/Gauge -->
-        <div class="speed-dial relative w-48 h-48 md:w-64 md:h-64 mb-10 flex items-center justify-center">
-            <div class="outer-ring absolute inset-0 rounded-full border-8 border-gray-200"></div>
-            <div class="inner-ring absolute inset-3 rounded-full border-8 border-gray-100"></div>
-            <div class="speed-value absolute text-5xl md:text-6xl font-bold text-blue-600 drop-shadow-lg" id="speedValue">0</div>
-            <div class="speed-unit absolute bottom-10 md:bottom-12 text-xl md:text-2xl text-gray-500" id="speedUnit">Mbps</div>
-            <div class="needle absolute origin-bottom transition-transform duration-300 ease-out" id="speedNeedle"></div>
-        </div>
-
-        <!-- Test Status and Results -->
-        <div class="status-section w-full text-center mb-8">
-            <p id="testStatus" class="text-xl md:text-2xl font-semibold text-blue-600 mb-4">Click "Start Test" to begin.</p>
-            <div class="results-grid grid grid-cols-2 gap-4 md:gap-6 bg-gray-50 p-5 rounded-lg shadow-sm border border-gray-100">
-                <div class="text-center">
-                    <p class="text-gray-600 text-base md:text-lg">Ping</p>
-                    <p id="pingResult" class="text-blue-500 text-xl md:text-2xl font-bold">0 ms</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-gray-600 text-base md:text-lg">Jitter</p>
-                    <p id="jitterResult" class="text-blue-500 text-xl md:text-2xl font-bold">0 ms</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-gray-600 text-base md:text-lg">Download</p>
-                    <p id="downloadResult" class="text-green-600 text-xl md:text-2xl font-bold">0 Mbps</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-gray-600 text-base md:text-lg">Upload</p>
-                    <p id="uploadResult" class="text-yellow-600 text-xl md:text-2xl font-bold">0 Mbps</p>
+            <!-- Status and Progress Display below the dial -->
+            <div class="absolute bottom-[-40px] w-full text-center">
+                <p id="status-message" class="text-lg font-semibold text-gray-700 mb-2">Ready to Test</p>
+                <div id="progress-container" class="hidden">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2 relative overflow-hidden">
+                        <div id="progress-bar" class="bg-gray-800 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%;"></div>
+                    </div>
+                    <p id="progress-text" class="text-sm text-gray-500"></p>
                 </div>
             </div>
         </div>
 
-        <!-- Start/Stop Button -->
-        <button id="startButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform active:scale-95 text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-300">
-            Start Test
-        </button>
+        <!-- Server Information -->
+        <div class="text-center text-sm text-gray-600 mt-12 mb-6">
+            <p>Your IP: <span id="user-ip">Detecting...</span></p>
+            <p>Server: <span id="server-location">Finding optimal server...</span></p>
+        </div>
+
+
+        <!-- Results Display -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 mt-12">
+            <div class="bg-gray-50 p-4 rounded-lg flex flex-col items-center shadow-sm">
+                <!-- Lucide Icon for Wifi, inline SVG for no external dependencies -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wifi text-gray-700 mb-2">
+                    <path d="M12 20.01V20"/><path d="M5 12.69l7 7.31l7-7.31"/><path d="M2 8.82l10 10.18l10-10.18"/><path d="M0 5l12 12l12-12"/>
+                </svg>
+                <p class="text-sm text-gray-600 font-medium">Ping</p>
+                <p id="ping-result" class="text-2xl font-bold text-gray-800">-</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg flex flex-col items-center shadow-sm">
+                <!-- Lucide Icon for Download, inline SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download text-gray-700 mb-2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
+                </svg>
+                <p class="text-sm text-gray-600 font-medium">Download</p>
+                <p id="download-result" class="text-2xl font-bold text-gray-800">-</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg flex flex-col items-center shadow-sm">
+                <!-- Lucide Icon for Upload, inline SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload text-gray-700 mb-2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
+                </svg>
+                <p class="text-sm text-gray-600 font-medium">Upload</p>
+                <p id="upload-result" class="text-2xl font-bold text-gray-800">-</p>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="flex justify-center mt-6">
+            <button id="start-button"
+                class="w-full py-4 px-8 rounded-full text-white font-extrabold text-xl
+                       flex items-center justify-center transition-all duration-300
+                       bg-gray-900 hover:bg-black active:bg-gray-800 shadow-xl btn-glow
+                       focus:outline-none focus:ring-4 focus:ring-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play mr-2" id="button-icon">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span id="button-text">Go</span>
+            </button>
+        </div>
+
+        <!-- Disclaimer -->
+        <p class="mt-8 text-xs text-gray-500 text-center">
+            * This is a simulated internet speed test for demonstration purposes only.
+            Actual results may vary significantly.
+        </p>
     </div>
 
-    <!-- Link to your external JavaScript file -->
-    <script src="script.js"></script>
+    <script>
+        // Get DOM elements
+        const startButton = document.getElementById('start-button');
+        const buttonIcon = document.getElementById('button-icon');
+        const buttonText = document.getElementById('button-text');
+        const statusMessage = document.getElementById('status-message');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const pingResult = document.getElementById('ping-result');
+        const downloadResult = document.getElementById('download-result');
+        const uploadResult = document.getElementById('upload-result');
+        const currentLiveSpeed = document.getElementById('current-live-speed');
+        const userIp = document.getElementById('user-ip');
+        const serverLocation = document.getElementById('server-location');
+
+
+        let isTesting = false; // Flag to track if a test is in progress
+
+        /**
+         * Simulates a delay using setTimeout.
+         * @param {number} ms - The delay in milliseconds.
+         * @returns {Promise<void>} A promise that resolves after the delay.
+         */
+        const simulateDelay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        /**
+         * Updates the UI to reflect the current test status and progress.
+         * @param {string} message - The status message to display.
+         * @param {number} progressValue - The percentage progress (0-100).
+         * @param {string} phase - The current test phase (e.g., 'Ping', 'Download').
+         */
+        const updateProgressUI = (message, progressValue, phase) => {
+            statusMessage.textContent = message;
+            progressBar.style.width = `${progressValue}%`;
+            progressText.textContent = `${phase} (${progressValue}%)`;
+            if (progressValue > 0) {
+                progressContainer.classList.remove('hidden');
+            }
+        };
+
+        /**
+         * Resets the UI to its initial state.
+         */
+        const resetUI = () => {
+            statusMessage.textContent = 'Ready to Test';
+            pingResult.textContent = '-';
+            downloadResult.textContent = '-';
+            uploadResult.textContent = '-';
+            currentLiveSpeed.classList.add('hidden'); // Hide live speed display initially
+            currentLiveSpeed.classList.remove('animate-pulse-custom'); // Remove pulse animation
+            progressBar.style.width = '0%';
+            progressText.textContent = '';
+            progressContainer.classList.add('hidden');
+            startButton.disabled = false;
+            startButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            startButton.classList.add('bg-gray-900', 'hover:bg-black', 'active:bg-gray-800', 'btn-glow');
+            buttonIcon.classList.remove('animate-spin-custom'); // Remove spin animation
+            buttonIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>'; // Play icon SVG
+            buttonText.textContent = 'Go';
+
+            // Remove animation classes from final results
+            pingResult.classList.remove('animate-fade-in-scale');
+            downloadResult.classList.remove('animate-fade-in-scale');
+            uploadResult.classList.remove('animate-fade-in-scale');
+
+            // Reset server info
+            userIp.textContent = 'Detecting...';
+            serverLocation.textContent = 'Finding optimal server...';
+        };
+
+        /**
+         * Simulates the animation of a number counting up.
+         * @param {HTMLElement} element - The DOM element to update.
+         * @param {number} start - The starting number.
+         * @param {number} end - The target number.
+         * @param {string} unit - The unit to append (e.g., ' ms', ' Mbps').
+         * @param {number} duration - Duration of the animation in milliseconds.
+         * @param {HTMLElement} [liveElement] - Optional element to update with live values during progress.
+         */
+        const animateNumber = (element, start, end, unit, duration = 500, liveElement = null) => {
+            let startTime = null;
+            const step = (currentTime) => {
+                if (!startTime) startTime = currentTime;
+                const progress = Math.min((currentTime - startTime) / duration, 1);
+                const value = start + (end - start) * progress;
+
+                const displayValue = value.toFixed(unit === ' ms' ? 0 : 2);
+                if (liveElement) {
+                    liveElement.innerHTML = `${displayValue} <span class="text-2xl">${unit.trim()}</span>`;
+                }
+                element.textContent = `${displayValue}${unit}`; // Update the final result display
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    element.classList.add('animate-fade-in-scale'); // Add fade-in-scale animation on completion
+                    if (liveElement) {
+                        liveElement.classList.add('hidden'); // Hide live speed after animation
+                        liveElement.classList.remove('animate-pulse-custom'); // Remove pulse animation
+                    }
+                }
+            };
+            requestAnimationFrame(step);
+        };
+
+        /**
+         * Initiates the simulated speed test.
+         */
+        const startTest = async () => {
+            if (isTesting) return; // Prevent multiple tests from running concurrently
+            isTesting = true;
+            startButton.disabled = true;
+            startButton.classList.remove('bg-gray-900', 'hover:bg-black', 'active:bg-gray-800', 'btn-glow');
+            startButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+            buttonIcon.classList.add('animate-spin-custom'); // Add spin animation
+            buttonIcon.innerHTML = '<path d="M21 12a9 9 0 1 1-6.219-8.56"/>'; // Loader2 icon SVG
+            buttonText.textContent = 'Testing...';
+
+            resetUI(); // Ensure UI is clean before starting new test
+
+            try {
+                // Simulate IP and Server Detection
+                statusMessage.textContent = 'Detecting IP and Server...';
+                await simulateDelay(1500);
+                userIp.textContent = '203.0.113.' + Math.floor(Math.random() * 255);
+                serverLocation.textContent = 'Mumbai, India (ISP)';
+                await simulateDelay(500);
+
+                // Phase 1: Ping Test Simulation
+                currentLiveSpeed.classList.remove('hidden'); // Show live speed display for ping
+                currentLiveSpeed.classList.add('animate-pulse-custom'); // Add pulse animation
+                currentLiveSpeed.innerHTML = `0 <span class="text-2xl">ms</span>`; // Initial display for ping
+
+                for (let i = 0; i <= 100; i += 10) {
+                    updateProgressUI('Testing Ping...', i, 'Ping');
+                    // Simulate fluctuating ping values
+                    const livePing = Math.floor(Math.random() * (i / 2 + 10)); // Ping increasing with progress
+                    currentLiveSpeed.innerHTML = `${livePing} <span class="text-2xl">ms</span>`;
+                    await simulateDelay(50);
+                }
+                const simulatedPing = Math.floor(Math.random() * (60 - 10 + 1)) + 10;
+                animateNumber(pingResult, parseInt(currentLiveSpeed.textContent), simulatedPing, ' ms', 600, currentLiveSpeed); // Animate final ping result
+                await simulateDelay(1000); // Wait for animation to finish and a short pause
+
+                // Phase 2: Download Speed Test Simulation
+                currentLiveSpeed.classList.remove('hidden'); // Show live speed display
+                currentLiveSpeed.classList.add('animate-pulse-custom'); // Add pulse animation
+                currentLiveSpeed.innerHTML = `0.00 <span class="text-2xl">Mbps</span>`; // Initial display for download
+
+                for (let i = 0; i <= 100; i += 5) {
+                    updateProgressUI('Testing Download Speed...', i, 'Download');
+                    // Simulate fluctuating download speeds
+                    const liveDownload = (Math.random() * (i * 5)).toFixed(2); // Speed increasing with progress
+                    currentLiveSpeed.innerHTML = `${liveDownload} <span class="text-2xl">Mbps</span>`;
+                    await simulateDelay(100);
+                }
+                const simulatedDownload = (Math.random() * (500 - 50) + 50);
+                animateNumber(downloadResult, parseFloat(currentLiveSpeed.textContent), simulatedDownload, ' Mbps', 800, currentLiveSpeed); // Animate final download result
+                await simulateDelay(1000);
+
+                // Phase 3: Upload Speed Test Simulation
+                currentLiveSpeed.classList.remove('hidden'); // Show live speed display
+                currentLiveSpeed.classList.add('animate-pulse-custom'); // Add pulse animation
+                currentLiveSpeed.innerHTML = `0.00 <span class="text-2xl">Mbps</span>`; // Initial display for upload
+
+                for (let i = 0; i <= 100; i += 5) {
+                    updateProgressUI('Testing Upload Speed...', i, 'Upload');
+                    // Simulate fluctuating upload speeds
+                    const liveUpload = (Math.random() * (i * 2)).toFixed(2); // Speed increasing with progress
+                    currentLiveSpeed.innerHTML = `${liveUpload} <span class="text-2xl">Mbps</span>`;
+                    await simulateDelay(100);
+                }
+                const simulatedUpload = (Math.random() * (200 - 20) + 20);
+                animateNumber(uploadResult, parseFloat(currentLiveSpeed.textContent), simulatedUpload, ' Mbps', 800, currentLiveSpeed); // Animate final upload result
+                await simulateDelay(1000);
+
+                // Test Completed
+                statusMessage.textContent = 'Test Complete!';
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Test Complete (100%)';
+
+            } catch (error) {
+                statusMessage.textContent = 'Test Failed: ' + error.message;
+                console.error('Speed test error:', error);
+            } finally {
+                isTesting = false;
+                startButton.disabled = false;
+                startButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                startButton.classList.add('bg-gray-900', 'hover:bg-black', 'active:bg-gray-800', 'btn-glow');
+                buttonIcon.classList.remove('animate-spin-custom');
+                buttonIcon.innerHTML = '<path d="M12 4v16M4 12h16"/>'; // Refresh icon SVG (could be Play for re-start)
+                buttonText.textContent = 'Test Again';
+                currentLiveSpeed.classList.add('hidden'); // Ensure live speed is hidden after test
+            }
+        };
+
+        // Event listener for the start button
+        startButton.addEventListener('click', startTest);
+
+        // Initial UI reset when the page loads
+        document.addEventListener('DOMContentLoaded', resetUI);
+    </script>
 </body>
 </html>
