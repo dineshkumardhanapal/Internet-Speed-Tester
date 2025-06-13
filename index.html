@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Ensures proper responsive scaling on all devices -->
-    <title>Speed Test by DK</title>
+    <title>Internet Speed Test</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -14,19 +14,23 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden; /* Prevent horizontal scrolling */
-            /* Changed background to iPhone-like white & gray gradient */
-            background: linear-gradient(135deg, #FFFFFF, #FFFFFF); /* Light gray to slightly darker light gray */
+            background: #e0e0e0; /* Changed to white background */
             display: flex;
             flex-direction: column; /* Changed to column to allow footer at the bottom */
             justify-content: space-between; /* Pushes content to top/bottom */
             align-items: center;
-            color: #333333; /* Darker text for contrast on light background */
+            color: #333333; /* Default text color for elements on white background */
             min-height: 100vh; /* Ensures body takes full viewport height */
+        }
+
+        /* Internet Speed Test title (on the purple container) */
+        h1 {
+            color: #ffffff; /* White text for contrast on the purple container */
         }
 
         /* Basic container styling */
         .speed-test-container {
-            background-color: rgba(255, 255, 255, 0.9); /* Lighter background for the container */
+            background-color: #7000ff; /* Solid #7000ff (purple/magenta) */
             backdrop-filter: blur(10px); /* Frosted glass effect */
             border-radius: 20px;
             padding: 2.5rem;
@@ -50,7 +54,8 @@
             left: -15px;
             right: -15px;
             bottom: -15px;
-            background: linear-gradient(115deg,#4fcf70,#fad648,#a767e5,#12bcfe,#44ce7b); /* Same gradient as button */
+            /* Shadow gradient matches the button's gradient */
+            background: linear-gradient(150deg,#a767e5,#12bcfe);
             filter: blur(30px); /* Applied more blur to create a stronger glow */
             border-radius: 30px; /* Slightly more than container border-radius to blend */
             z-index: -1; /* Place behind the container content */
@@ -62,14 +67,14 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Speed display styling */
+        /* Speed display styling (Ready to test? message) */
         .speed-display {
             font-size: 3.5rem; /* Uses rem for scaling with root font size */
             font-weight: 700;
             margin-top: 1.5rem;
             margin-bottom: 2rem;
-            color: #00FFFF; /* Vibrant aqua accent */
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            color: #ffffff; /* White text for contrast on purple container */
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Adjusted for white text */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -83,14 +88,14 @@
             font-weight: 400;
             margin-bottom: 0.5rem;
             opacity: 0.8;
-            color: #555555; /* Slightly darker gray for readability on light background */
+            color: #e0e0e0; /* Lighter gray for readability on purple container */
         }
 
         /* Test button styling */
         .codepen-button {
             display: block;
             cursor: pointer;
-            color: white;
+            color: white; /* "Go" text remains white */
             margin: 6rem auto 6rem; /* Increased margin-top and margin-bottom for much more space */
             position: relative;
             text-decoration: none;
@@ -115,7 +120,7 @@
             left: 0;
             width: 400%;
             height: 100%;
-            background: linear-gradient(115deg,#4fcf70,#fad648,#a767e5,#12bcfe,#44ce7b);
+            background: linear-gradient(115deg,#a767e5,#12bcfe,#44ce7b);
             background-size: 25% 100%;
             animation: an-at-keyframe-css-at-rule-that-translates-via-the-transform-property-the-background-by-negative-25-percent-of-its-width-so-that-it-gives-a-nice-border-animation_-We-use-the-translate-property-to-have-a-nice-transition-so-it_s-not-a-jerk-of-a-start-or-stop .75s linear infinite;
             animation-play-state: paused;
@@ -154,13 +159,13 @@
         }
 
 
-        /* Info section styling */
+        /* Info section styling (for IP and Server Name) */
         .info-item {
             display: flex; /* Uses flexbox for horizontal layout */
             justify-content: space-between; /* Spreads items to ends */
             align-items: center; /* Vertically centers items */
             padding: 0.75rem 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Lighter border for contrast on light background */
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Lighter border for contrast on white background */
             font-size: 1rem; /* Uses rem for scaling */
         }
 
@@ -171,19 +176,19 @@
         .info-label {
             font-weight: 400;
             opacity: 0.8;
-            color: #666666; /* Darker gray for readability on light background */
+            color: #555555; /* Darker gray for readability on white background */
             text-align: left; /* Align label to the left */
         }
 
         .info-value {
             font-weight: 600;
-            color: #008080; /* A darker aqua for better contrast on light background */
+            color: #333333; /* Black text for values on white background */
             text-align: right; /* Align value to the right */
         }
 
-        /* Result card styling */
+        /* Result card styling (Ping, Download, Upload boxes) */
         .result-card {
-            background-color: rgba(255, 255, 255, 0.95); /* Lighter background for result cards */
+            background-color: #ffffff; /* Changed to white background for result cards */
             border-radius: 15px;
             padding: 1.25rem;
             margin-bottom: 1rem;
@@ -220,8 +225,8 @@
         .result-value {
             font-size: 1.8rem;
             font-weight: 700;
-            color: #008080; /* A darker aqua for better contrast on light background */
-            text-shadow: 0 0 5px rgba(0, 128, 128, 0.3); /* Adjust shadow for darker aqua */
+            color: #000000; /* Black text for result values */
+            text-shadow: none; /* Removed text shadow for better contrast on white */
             text-align: left;
         }
 
@@ -230,13 +235,13 @@
             font-weight: 600;
             margin-left: 0.25rem;
             opacity: 0.9;
-            color: #444444; /* Darker unit text */
+            color: #333333; /* Dark gray for unit text */
         }
 
         .result-label {
             font-size: 1rem;
             opacity: 0.7;
-            color: #666666; /* Darker label text */
+            color: #555555; /* Darker gray for label text */
             text-align: right;
         }
 
@@ -267,7 +272,7 @@
             border-radius: 50%; /* Ensure they are circles throughout animation */
         }
 
-        /* Individual colors for background objects with low transparency */
+        /* Individual colors for background objects with increased transparency on new background */
         .bg-circles li:nth-child(1) { background: rgba(255, 0, 0, 0.1); left: 25%; width: 80px; height: 80px; animation-delay: 0s; } /* Red */
         .bg-circles li:nth-child(2) { background: rgba(255, 255, 0, 0.1); left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; } /* Yellow */
         .bg-circles li:nth-child(3) { background: rgba(128, 0, 128, 0.1); left: 70%; width: 20px; height: 20px; animation-delay: 4s; } /* Purple */
@@ -371,7 +376,7 @@
         </div>
     </div>
 
-    <footer class="w-full text-center py-4 text-sm text-black-400 mt-auto">
+    <footer class="w-full text-center py-4 text-sm mt-auto" style="color: #333333;">
         Copyright 2025 &copy; Made with &#x2764; by DineshKumar Dhanapal
     </footer>
 
