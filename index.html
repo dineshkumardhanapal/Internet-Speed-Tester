@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Ensures proper responsive scaling on all devices -->
+    <title>Internet Speed Test</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+            background: #e0e0e0; /* Changed to white background */
+            display: flex;
+            flex-direction: column; /* Changed to column to allow footer at the bottom */
+            justify-content: space-between; /* Pushes content to top/bottom */
+            align-items: center;
+            color: #333333; /* Default text color for elements on white background */
+            min-height: 100vh; /* Ensures body takes full viewport height */
+        }
+
+        /* Internet Speed Test title (on the purple container) */
+        h1 {
+            color: #ffffff; /* White text for contrast on the purple container */
+        }
+
+        /* Basic container styling */
+        .speed-test-container {
+            background-color: #7000ff; /* Solid #7000ff (purple/magenta) */
+            backdrop-filter: blur(10px); /* Frosted glass effect */
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: none; /* Resetting existing shadow, as it's handled by ::before */
+            text-align: center;
+            width: 90%; /* Responsive width: takes 90% of screen width */
+            max-width: 500px; /* Limits maximum width on larger screens */
+            position: relative;
+            z-index: 10;
+            animation: fadeIn 0.8s ease-out;
+            margin-top: 2rem; /* Add some margin from the top */
+            margin-bottom: 2rem; /* Add some margin from the bottom to separate from footer */
+            overflow: hidden; /* Ensure any extended shadow/glow is clipped neatly if it uses internal positioning */
+        }
+
+        /* New pseudo-element for glowing gradient shadow */
+        .speed-test-container::before {
+            content: "";
+            position: absolute;
+            top: -15px; /* Increased extension for more blur spread */
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
+            /* Shadow gradient matches the button's gradient */
+            background: linear-gradient(150deg,#a767e5,#12bcfe);
+            filter: blur(30px); /* Applied more blur to create a stronger glow */
+            border-radius: 30px; /* Slightly more than container border-radius to blend */
+            z-index: -1; /* Place behind the container content */
+            opacity: 0.8; /* Increased opacity for better visibility */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Speed display styling (Ready to test? message) */
+        .speed-display {
+            font-size: 3.5rem; /* Uses rem for scaling with root font size */
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 2rem;
+            color: #ffffff; /* White text for contrast on purple container */
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Adjusted for white text */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 150px; /* Fixed height for consistent animation area */
+            transition: all 0.5s ease-in-out;
+        }
+
+        .speed-label {
+            font-size: 1.2rem; /* Uses rem for scaling */
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+            opacity: 0.8;
+            color: #e0e0e0; /* Lighter gray for readability on purple container */
+        }
+
+        /* Test button styling */
+        .codepen-button {
+            display: block;
+            cursor: pointer;
+            color: white; /* "Go" text remains white */
+            margin: 6rem auto 6rem; /* Increased margin-top and margin-bottom for much more space */
+            position: relative;
+            text-decoration: none;
+            font-weight: 600;
+            overflow: hidden;
+            padding: 8px; /* Increased padding to give more room for the border animation/glow */
+            isolation: isolate;
+            width: 140px; /* Set a fixed width for the outer circular container */
+            height: 140px; /* Set a fixed height for the outer circular container */
+            border-radius: 50%; /* Make the outer container circular */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Added box-shadow to the button itself for additional depth */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .codepen-button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 400%;
+            height: 100%;
+            background: linear-gradient(180deg,#a767e5,#12bcfe,#44ce7b);
+            background-size: 25% 100%;
+            animation: an-at-keyframe-css-at-rule-that-translates-via-the-transform-property-the-background-by-negative-25-percent-of-its-width-so-that-it-gives-a-nice-border-animation_-We-use-the-translate-property-to-have-a-nice-transition-so-it_s-not-a-jerk-of-a-start-or-stop .75s linear infinite;
+            animation-play-state: paused;
+            translate: -5% 0%;
+            transition: translate 0.25s ease-out;
+            /* Ensure the ::before also respects the circular shape */
+            border-radius: 50%;
+            /* Added a subtle blur to the before pseudo-element to enhance the glow effect */
+            filter: blur(2px);
+        }
+
+        .codepen-button:hover::before {
+            animation-play-state: running;
+            transition-duration: 0.75s;
+            translate: 0% 0%;
+        }
+
+        @keyframes an-at-keyframe-css-at-rule-that-translates-via-the-transform-property-the-background-by-negative-25-percent-of-its-width-so-that-it-gives-a-nice-border-animation_-We-use-the-translate-property-to-have-a-nice-transition-so-it_s-not-a-jerk-of-a-start-or-stop {
+            to {
+                transform: translateX(-25%);
+            }
+        }
+
+        .codepen-button span {
+            position: relative;
+            display: block;
+            width: calc(100% - 16px); /* Account for 8px padding on each side of the button */
+            height: calc(100% - 16px); /* Account for 8px padding on each side of the button */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem; /* Larger font for "Go" in a big circle */
+            background: #000; /* Dark background for the inner content */
+            border-radius: 50%; /* Make the inner content circular */
+            height: 100%; /* Ensure it fills the parent's height */
+        }
+
+
+        /* Info section styling (for IP and Server Name) */
+        .info-item {
+            display: flex; /* Uses flexbox for horizontal layout */
+            justify-content: space-between; /* Spreads items to ends */
+            align-items: center; /* Vertically centers items */
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Lighter border for contrast on white background */
+            font-size: 1rem; /* Uses rem for scaling */
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 400;
+            opacity: 0.8;
+            color: #ffffff; /* Darker gray for readability on white background */
+            text-align: left; /* Align label to the left */
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #ffffff; /* Black text for values on white background */
+            text-align: right; /* Align value to the right */
+        }
+
+        /* Result card styling (Ping, Download, Upload boxes) */
+        .result-card {
+            background-color: #e0e0e0; /* Changed to white background for result cards */
+            border-radius: 15px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column; /* Stacks items vertically */
+            align-items: center; /* Centers items horizontally */
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.6s forwards ease-out;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Lighter shadow for cards */
+        }
+
+        /* For the Ping card, which doesn't have a gauge */
+        .result-card.ping-card {
+            display: flex;
+            flex-direction: row; /* Horizontal layout for ping */
+            justify-content: space-between;
+            align-items: center;
+        }
+        .result-card.ping-card .ping-value-container {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        /* Flex container for value and label at the bottom of the card */
+        .result-text-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%; /* Take full width of the card */
+        }
+
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #000000; /* Black text for result values */
+            text-shadow: none; /* Removed text shadow for better contrast on white */
+            text-align: left;
+        }
+
+        .result-unit {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+            opacity: 0.9;
+            color: #000000; /* Dark gray for unit text */
+        }
+
+        .result-label {
+            font-size: 1rem;
+            opacity: 0.7;
+            color: #555555; /* Darker gray for label text */
+            text-align: right;
+        }
+
+        @keyframes slideIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+
+        /* Background animated circles */
+        .bg-circles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .bg-circles li {
+            position: absolute;
+            display: block;
+            list-style: none;
+            width: 20px;
+            height: 20px;
+            animation: animate 25s linear infinite;
+            bottom: -150px;
+            border-radius: 50%; /* Ensure they are circles throughout animation */
+        }
+
+        /* Individual colors for background objects with increased transparency on new background */
+        .bg-circles li:nth-child(1) { background: rgba(255, 0, 0, 0.1); left: 25%; width: 80px; height: 80px; animation-delay: 0s; } /* Red */
+        .bg-circles li:nth-child(2) { background: rgba(255, 255, 0, 0.1); left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; } /* Yellow */
+        .bg-circles li:nth-child(3) { background: rgba(128, 0, 128, 0.1); left: 70%; width: 20px; height: 20px; animation-delay: 4s; } /* Purple */
+        .bg-circles li:nth-child(4) { background: rgba(255, 0, 0, 0.1); left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; } /* Red */
+        .bg-circles li:nth-child(5) { background: rgba(255, 255, 0, 0.1); left: 65%; width: 20px; height: 20px; animation-delay: 0s; } /* Yellow */
+        .bg-circles li:nth-child(6) { background: rgba(128, 0, 128, 0.1); left: 75%; width: 110px; height: 110px; animation-delay: 3s; } /* Purple */
+        .bg-circles li:nth-child(7) { background: rgba(255, 0, 0, 0.1); left: 35%; width: 150px; height: 150px; animation-delay: 7s; } /* Red */
+        .bg-circles li:nth-child(8) { background: rgba(255, 255, 0, 0.1); left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; } /* Yellow */
+        .bg-circles li:nth-child(9) { background: rgba(128, 0, 128, 0.1); left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; } /* Purple */
+        .bg-circles li:nth-child(10) { background: rgba(255, 0, 0, 0.1); left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; } /* Red */
+
+        @keyframes animate {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+                border-radius: 0;
+            }
+            100% {
+                transform: translateY(-1000px) rotate(720deg);
+                opacity: 0;
+                border-radius: 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-circles">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+    </div>
+
+    <div class="speed-test-container">
+        <h1 class="text-3xl font-bold mb-4">Internet Speed Test</h1>
+
+        <!-- Start Test Button (CodePen Style) -->
+        <button id="startButton" class="codepen-button">
+            <span>Go</span>
+        </button>
+
+
+        <!-- Speed Display / Animation Area -->
+        <div id="testArea" class="transition-all duration-500 ease-in-out">
+            <div class="speed-display" id="initialDisplay">
+                <span class="speed-label">Ready to test?</span>
+                <span id="speedValue"></span>
+            </div>
+            <!-- Text for current test stage -->
+            <div class="animation-text" id="currentTestStage"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden mt-8 grid gap-4">
+            <!-- Ping Result Card - No Gauge, Fixed Alignment -->
+            <div class="result-card ping-card">
+                <div class="flex items-end ping-value-container">
+                    <span class="result-value" id="pingResult">0</span>
+                    <span class="result-unit">ms</span>
+                </div>
+                <span class="result-label">Ping</span>
+            </div>
+            <!-- Download Speed Result Card -->
+            <div class="result-card">
+                <div class="result-text-row">
+                    <div class="flex items-end">
+                        <span class="result-value" id="downloadResult">0</span>
+                        <span class="result-unit">Mbps</span>
+                    </div>
+                    <span class="result-label">Download Speed</span>
+                </div>
+            </div>
+            <!-- Upload Speed Result Card -->
+            <div class="result-card">
+                <div class="result-text-row">
+                    <div class="flex items-end">
+                        <span class="result-value" id="uploadResult">0</span>
+                        <span class="result-unit">Mbps</span>
+                    </div>
+                    <span class="result-label">Upload Speed</span>
+                </div>
+            </div>
+
+            <!-- IP and Server Info -->
+            <div class="mt-8">
+                <div class="info-item">
+                    <span class="info-label">Public IP Address:</span>
+                    <span class="info-value" id="publicIp">Loading...</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Server Name:</span>
+                    <span class="info-value" id="serverName">Not available</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="w-full text-center py-4 text-sm mt-auto" style="color: #333333;">
+        Copyright 2025 &copy; Made with &#x2764; by DK
+    </footer>
+
+    <script>
+        // DOM elements
+        const publicIpElement = document.getElementById('publicIp');
+        const serverNameElement = document.getElementById('serverName');
+        const startButton = document.getElementById('startButton');
+        const initialDisplay = document.getElementById('initialDisplay');
+        const testArea = document.getElementById('testArea');
+        const currentTestStage = document.getElementById('currentTestStage');
+        const resultsSection = document.getElementById('resultsSection');
+        const pingResultElement = document.getElementById('pingResult');
+        const downloadResultElement = document.getElementById('downloadResult');
+        const uploadResultElement = document.getElementById('uploadResult');
+        const speedValueElement = document.getElementById('speedValue');
+
+        // Test parameters
+        const PING_COUNT = 5;
+        const PING_TEST_URL = 'https://speed.cloudflare.com/';
+        const DOWNLOAD_TEST_FILE_SIZE_MB = 10;
+        const DOWNLOAD_TEST_URL = `https://speed.cloudflare.com/__down?bytes=${DOWNLOAD_TEST_FILE_SIZE_MB * 1024 * 1024}`;
+        const UPLOAD_TEST_FILE_SIZE_MB = 5;
+
+        // Max values for percentage calculation (still relevant if re-adding gauge later or for logic)
+        const MAX_PING_GAUGE = 200;
+        const MAX_SPEED_GAUGE = 100;
+
+        /**
+         * Fetches the user's public IP address and associated details.
+         * Uses ipify.org for IP and ipinfo.io for additional details (limited without API key).
+         */
+        async function getPublicIpAndServerName() {
+            publicIpElement.textContent = 'Fetching IP...';
+            serverNameElement.textContent = 'Locating server...';
+            try {
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                const ip = ipData.ip;
+                publicIpElement.textContent = ip;
+
+                const infoResponse = await fetch(`https://ipinfo.io/${ip}/json`);
+                const infoData = await infoResponse.json();
+                serverNameElement.textContent = infoData.org || infoData.isp || 'Global Server';
+
+            } catch (error) {
+                console.error('Error fetching IP or server info:', error);
+                publicIpElement.textContent = 'Error';
+                serverNameElement.textContent = 'Unknown';
+            }
+        }
+
+        /**
+         * Performs a series of ping tests and calculates the average latency.
+         * @returns {Promise<number>} Average ping in ms.
+         */
+        async function runPingTest() {
+            currentTestStage.textContent = 'Pinging...';
+            const latencies = [];
+            for (let i = 0; i < PING_COUNT; i++) {
+                const startTime = performance.now();
+                try {
+                    await fetch(PING_TEST_URL + `?_cachebust=${Date.now() + i}`, { method: 'HEAD', cache: 'no-store' });
+                    const endTime = performance.now();
+                    latencies.push(endTime - startTime);
+                } catch (error) {
+                    console.warn('Ping failed:', error);
+                    latencies.push(500);
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            const averageLatency = latencies.reduce((sum, val) => sum + val, 0) / latencies.length;
+            return Math.round(averageLatency);
+        }
+
+        /**
+         * Performs a download speed test.
+         * @returns {Promise<number>} Download speed in Mbps.
+         */
+        async function runDownloadTest() {
+            currentTestStage.textContent = 'Downloading...';
+            const startTime = performance.now();
+            try {
+                const response = await fetch(DOWNLOAD_TEST_URL + `&_cachebust=${Date.now()}`, { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                await response.arrayBuffer();
+                const endTime = performance.now();
+                const durationSeconds = (endTime - startTime) / 1000;
+                const fileSizeBits = DOWNLOAD_TEST_FILE_SIZE_MB * 8 * 1000 * 1000;
+                const speedMbps = (fileSizeBits / durationSeconds) / 1000000;
+                return parseFloat(speedMbps.toFixed(2));
+            } catch (error) {
+                console.error('Download test failed:', error);
+                return 0;
+            }
+        }
+
+        /**
+         * Simulates an upload speed test.
+         * @returns {Promise<number>} Simulated upload speed in Mbps.
+         */
+        async function runUploadTest() {
+            currentTestStage.textContent = 'Uploading...';
+            const startTime = performance.now();
+            try {
+                await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
+                const endTime = performance.now();
+                const durationSeconds = (endTime - startTime) / 1000;
+                const fileSizeBits = UPLOAD_TEST_FILE_SIZE_MB * 8 * 1000 * 1000;
+                const simulatedSpeedMbps = (fileSizeBits / durationSeconds) / 1000000;
+                return parseFloat(simulatedSpeedMbps.toFixed(2));
+            } catch (error) {
+                console.error('Upload simulation failed:', error);
+                return 0;
+            }
+        }
+
+        /**
+         * Animates a number counting up.
+         * @param {HTMLElement} textElement - The DOM element to update with the number text.
+         * @param {number} start - Starting value.
+         * @param {number} end - Target value.
+         * @param {number} duration - Animation duration in ms.
+         */
+        function animateNumber(textElement, start, end, duration) {
+            let startTime = null;
+            const step = (currentTime) => {
+                if (!startTime) startTime = currentTime;
+                const progress = Math.min((currentTime - startTime) / duration, 1);
+                const value = progress * (end - start) + start;
+
+                textElement.textContent = Math.floor(value);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    textElement.textContent = end; // Ensure final value is set
+                }
+            };
+            requestAnimationFrame(step);
+        }
+
+        /**
+         * Orchestrates the entire speed test process.
+         */
+        async function startSpeedTest() {
+            startButton.disabled = true; // Disable the button
+            resultsSection.classList.add('hidden'); // Hide results
+            initialDisplay.classList.add('hidden'); // Hide "Ready to test?" message
+
+            // Show the main test area for messages
+            testArea.classList.remove('hidden');
+            currentTestStage.textContent = 'Starting test...'; // Initial message
+
+            // Directly start with ping test after a small initial message display
+            await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for "Starting test..."
+
+            currentTestStage.textContent = 'Pinging...'; // Update stage text
+
+            // Ping Test
+            const ping = await runPingTest();
+            animateNumber(pingResultElement, 0, ping, 1000); // Call animateNumber directly
+
+            currentTestStage.textContent = 'Testing Download & Upload...'; // Update stage text
+
+            // Run Download and Upload tests in parallel
+            const [download, upload] = await Promise.all([
+                runDownloadTest(),
+                runUploadTest()
+            ]);
+
+            // Animate results for download
+            animateNumber(downloadResultElement, 0, download, 1500); // Call animateNumber directly
+
+            // Animate results for upload
+            animateNumber(uploadResultElement, 0, upload, 1500); // Call animateNumber directly
+
+
+            // Show results section
+            testArea.classList.add('hidden'); // Hide the test animation area
+            resultsSection.classList.remove('hidden'); // Show final results
+
+            // Trigger slide-in animation for result cards
+            document.querySelectorAll('.result-card').forEach(card => {
+                card.style.animation = 'none'; // Reset animation
+                void card.offsetWidth; // Trigger reflow
+                card.style.animation = ''; // Reapply animation
+            });
+
+            startButton.disabled = false; // Re-enable the button
+            currentTestStage.textContent = ''; // Clear test stage text for next run
+        }
+
+        // Event Listener for the Start Button
+        startButton.addEventListener('click', startSpeedTest);
+
+        // Initialize on page load
+        window.onload = () => {
+            getPublicIpAndServerName();
+        };
+    </script>
+</body>
+</html>
